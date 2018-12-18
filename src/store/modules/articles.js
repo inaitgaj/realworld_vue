@@ -38,10 +38,10 @@ export default {
           faourited = null,
           page = 1
         } = payload; //initialize variables from payload.
-        route += tag ? `?tag=${tag}` : "";
-        route += author ? `?author=${author}` : "";
-        route += faourited ? `?faourited=${faourited}` : "";
         route += page ? `?offset=${(page - 1) * 10}&limit=10` : "";
+        route += tag ? `&tag=${tag}` : "";
+        route += author ? `&author=${author}` : "";
+        route += faourited ? `&faourited=${faourited}` : "";
       }
       const response = await api.get(route);
       commit("setArticles", response.data);
@@ -79,6 +79,14 @@ export default {
     async removeArticle({ commit }, slug) {
       await api.delete(`/articles/${slug}`);
       commit("setCurrentArticle", null);
+    },
+    async postComment(payload) {
+      return await api.post(`/articles/${payload.slug}/comments`, {
+        comment: { body: payload.comment }
+      });
+    },
+    async getTags() {
+      return await api.get("/tags");
     }
   }
 };

@@ -34,16 +34,17 @@
           </div>
 
 
-          <ArticlePreview v-for="article in globalArticles" :key="article.slug" :article="article">
+          <ArticlePreview v-show="countPages > 0" v-for="article in globalArticles" :key="article.slug" :article="article">
 
           </ArticlePreview>
+          <div class="article-preview" v-show="countPages == 0"> No articles are here... yet. </div>
           <div>
             <ul class="pagination">
               <li
                 v-for="page in countPages"
                 :key="page"
                 class="page-item"
-                :class="{active : currentPage == page}"
+                :class="{active : filters.page == page}"
                 @click.prevent="changePage(page)">
                 <a class="page-link" href v-text="page" />
               </li>
@@ -55,15 +56,14 @@
           <div class="sidebar">
             <p>Popular Tags</p>
 
-            <div class="tag-list">
-              <a href="" class="tag-pill tag-default">programming</a>
-              <a href="" class="tag-pill tag-default">javascript</a>
-              <a href="" class="tag-pill tag-default">emberjs</a>
-              <a href="" class="tag-pill tag-default">angularjs</a>
-              <a href="" class="tag-pill tag-default">react</a>
-              <a href="" class="tag-pill tag-default">mean</a>
-              <a href="" class="tag-pill tag-default">node</a>
-              <a href="" class="tag-pill tag-default">rails</a>
+            <div  class="tag-list">
+              <a href=""
+              v-for="(tag,index) in tags" :key="index"
+              @click.prevent="changeTag(tag)"
+              class="tag-pill tag-default"
+              :class="{active : filters.tag == tag}">
+              {{tag}}</a>
+
             </div>
           </div>
         </div>
@@ -86,21 +86,33 @@ export default {
       activeFeed: "global",
       filters: {
         page: 1
-      }
+      },
+      tags: []
     };
   },
   methods: {
     setFeed() {
       //dispatches action to users module, loginUser action
       var feedType = this.activeFeed;
+
       if (feedType == "global") {
         this.$store.dispatch("articles/getGlobalFeed", this.filters);
       } else if (feedType == "user") {
         this.$store.dispatch("articles/getUserFeed", this.filters);
       }
     },
+    getTags() {
+      this.$store.dispatch("articles/getTags").then(response => {
+        this.tags = response.data.tags;
+      });
+    },
     changeFeedType(feedType) {
       this.activeFeed = feedType;
+      this.setFeed();
+      this.filters.tag = "";
+    },
+    changeTag(tag) {
+      this.filters.tag = tag;
       this.setFeed();
     },
     changePage(page) {
@@ -110,6 +122,7 @@ export default {
   },
   created() {
     this.setFeed();
+    this.getTags();
   },
   computed: {
     globalArticles() {
@@ -119,7 +132,7 @@ export default {
       return this.$store.getters["users/username"];
     },
     countPages() {
-      return this.$store.state.articles.count / 10;
+      return Math.ceil(this.$store.state.articles.count / 10);
     }
   }
 };

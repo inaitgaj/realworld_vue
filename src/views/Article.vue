@@ -16,26 +16,26 @@
         </div>
         <button v-show="article.author.username === username" @click="edit" class="btn btn-sm btn-outline-secondary">
           <i class="ion-edit"></i>
-          &nbsp;
+
            Edit Article
         </button>
-        <button v-show="article.author.username === username" @click="remove" class="btn btn-sm btn-outline-secondary">
-          <i class="ion-edit"></i>
-          &nbsp;
+        &nbsp;
+        <button v-show="article.author.username === username" @click="remove" class="btn btn-outline-danger btn-sm">
+          <i class="ion-trash-a"></i>
+
            Delete Article
         </button>
-
+        &nbsp;
         <button v-show="article.author.username !== username" @click= "follow" class="btn btn-sm btn-outline-secondary">
           <i class="ion-plus-round"></i>
           &nbsp;
           Follow {{article.author.username}}
         </button>
-
-        &nbsp;&nbsp;
-        <button class="btn btn-sm btn-outline-primary" :class="{active : article.favourited}">
+        &nbsp;
+        <button v-show="article.author.username !== username" class="btn btn-sm btn-outline-primary" :class="{active : article.favourited}">
           <i class="ion-heart"></i>
           &nbsp;
-          Favorite Post <span class="counter">{{article.favoritesCount}}</span>
+          Favorite Post <span class="counter">({{article.favoritesCount}})</span>
         </button>
       </div>
 
@@ -67,12 +67,13 @@
 
         <button v-show="article.author.username === username" @click="edit" class="btn btn-sm btn-outline-secondary">
           <i class="ion-edit"></i>
-          &nbsp;
+
            Edit Article
         </button>
-        <button v-show="article.author.username === username" @click="remove" class="btn btn-sm btn-outline-secondary">
-          <i class="ion-edit"></i>
-          &nbsp;
+        &nbsp;
+        <button v-show="article.author.username === username" @click="remove" class="btn btn-outline-danger btn-sm">
+          <i class="ion-trash-a"></i>
+
            Delete Article
         </button>
         <button v-show="article.author.username !== username" @click= "follow" class="btn btn-sm btn-outline-secondary">
@@ -81,7 +82,7 @@
           Follow {{article.author.username}}
         </button>
         &nbsp;
-        <button class="btn btn-sm btn-outline-primary" :class="{active : article.favourited}">
+        <button v-show="article.author.username !== username" class="btn btn-sm btn-outline-primary" :class="{active : article.favourited}">
           <i class="ion-heart"></i>
           &nbsp;
           Favorite Post <span class="counter">({{article.favoritesCount}})</span>
@@ -95,11 +96,11 @@
 
         <form class="card comment-form">
           <div class="card-block">
-            <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
+            <textarea v-model="newComment" class="form-control" placeholder="Write a comment..." rows="3"></textarea>
           </div>
           <div class="card-footer">
-            <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-            <button class="btn btn-sm btn-primary">
+            <img :src="user.image" class="comment-author-img" />
+            <button @click = "postComment" class="btn btn-sm btn-primary">
              Post Comment
             </button>
           </div>
@@ -133,7 +134,8 @@ import moment from "moment";
 export default {
   data: function() {
     return {
-      article: null
+      article: null,
+      newComment: ""
     };
   },
   methods: {
@@ -153,6 +155,19 @@ export default {
     remove() {
       this.$store.dispatch("articles/removeArticle", this.article.slug);
       this.$router.push({ name: "home" });
+    },
+    postComment() {
+      this.$store.dispatch("articles/postComment", {
+        comment: this.newComment,
+        slug: this.article.slug
+      });
+      this.newComment = "";
+      this.fetchComments();
+    },
+    fetchComments() {
+      this.$store.dispatch("articles/getComments", {
+        slug: this.$route.params.articleslug
+      });
     }
   },
   computed: {
@@ -164,9 +179,12 @@ export default {
     },
     username() {
       return this.$store.getters["users/username"];
+    },
+    user() {
+      return this.$store.state.users.user;
     }
   },
-  beforeCreate() {
+  created() {
     this.$store
       .dispatch("articles/getCurrentArticle", {
         slug: this.$route.params.articleslug
@@ -174,9 +192,7 @@ export default {
       .then(() => {
         this.article = this.$store.state.articles.article;
       });
-    this.$store.dispatch("articles/getComments", {
-      slug: this.$route.params.articleslug
-    });
+    this.fetchComments();
   }
 };
 </script>
