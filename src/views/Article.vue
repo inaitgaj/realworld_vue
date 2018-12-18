@@ -157,10 +157,12 @@ export default {
       this.$router.push({ name: "home" });
     },
     postComment() {
-      this.$store.dispatch("articles/postComment", {
+      var payload = {
         comment: this.newComment,
         slug: this.article.slug
-      });
+      };
+
+      this.$store.dispatch("articles/postComment", payload);
       this.newComment = "";
       this.fetchComments();
     },
@@ -184,7 +186,7 @@ export default {
       return this.$store.state.users.user;
     }
   },
-  created() {
+  beforeCreate() {
     this.$store
       .dispatch("articles/getCurrentArticle", {
         slug: this.$route.params.articleslug
@@ -192,6 +194,8 @@ export default {
       .then(() => {
         this.article = this.$store.state.articles.article;
       });
+  },
+  created() {
     this.fetchComments();
   }
 };

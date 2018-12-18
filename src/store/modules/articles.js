@@ -80,10 +80,12 @@ export default {
       await api.delete(`/articles/${slug}`);
       commit("setCurrentArticle", null);
     },
-    async postComment(payload) {
-      return await api.post(`/articles/${payload.slug}/comments`, {
+    async postComment({ commit, state }, payload) {
+      var response = await api.post(`/articles/${payload.slug}/comments`, {
         comment: { body: payload.comment }
       });
+      commit("setComments", state.comments);
+      return response;
     },
     async getTags() {
       return await api.get("/tags");
